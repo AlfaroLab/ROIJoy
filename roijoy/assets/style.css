@@ -14,9 +14,9 @@
     --border-subtle: #1c2233;
     --border-panel: #242b3d;
     --border-active: #00e5cc33;
-    --text-primary: #c8cdd8;
-    --text-secondary: #6b7280;
-    --text-dim: #3d4454;
+    --text-primary: #e2e6ed;
+    --text-secondary: #9ca3af;
+    --text-dim: #5c6578;
     --accent: #00e5cc;
     --accent-muted: #00e5cc22;
     --accent-glow: #00e5cc15;
@@ -553,6 +553,153 @@ body::after {
 /* Hide plotly logo link */
 .js-plotly-plot .plotly a[data-title="Produced with Plotly"] {
     display: none !important;
+}
+
+/* ── File Dropdown ─────────────────────────────────── */
+
+.file-dropdown {
+    margin: 4px 20px 6px !important;
+}
+
+.file-dropdown .Select-control {
+    background: var(--bg-recessed) !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: var(--radius-sm) !important;
+    color: var(--text-primary) !important;
+    font-family: var(--font-mono) !important;
+    font-size: 11px !important;
+}
+
+.file-dropdown .Select-menu-outer {
+    background: var(--bg-surface) !important;
+    border: 1px solid var(--border-panel) !important;
+    border-radius: var(--radius-sm) !important;
+    font-family: var(--font-mono) !important;
+    font-size: 11px !important;
+    max-height: 250px !important;
+}
+
+.file-dropdown .Select-option {
+    background: transparent !important;
+    color: var(--text-secondary) !important;
+    padding: 6px 10px !important;
+}
+
+.file-dropdown .Select-option:hover,
+.file-dropdown .Select-option.is-focused {
+    background: var(--accent-muted) !important;
+    color: var(--text-primary) !important;
+}
+
+.file-dropdown .Select-option.is-selected {
+    background: var(--accent) !important;
+    color: var(--bg-deep) !important;
+}
+
+.file-dropdown .Select-placeholder {
+    color: var(--text-dim) !important;
+    font-style: italic;
+}
+
+.file-dropdown .Select-value-label {
+    color: var(--text-primary) !important;
+}
+
+.file-dropdown .Select-input input {
+    color: var(--text-primary) !important;
+    font-family: var(--font-mono) !important;
+}
+
+/* Dash 4 dropdown overrides (uses different class names) */
+.file-dropdown .dash-dropdown {
+    font-family: var(--font-mono) !important;
+}
+
+.file-dropdown [class*="control"] {
+    background: var(--bg-recessed) !important;
+    border-color: var(--border-subtle) !important;
+    min-height: 32px !important;
+}
+
+.file-dropdown [class*="menu"] {
+    background: var(--bg-surface) !important;
+    border: 1px solid var(--border-panel) !important;
+}
+
+.file-dropdown [class*="option"] {
+    font-family: var(--font-mono) !important;
+    font-size: 11px !important;
+    color: var(--text-secondary) !important;
+    padding: 6px 10px !important;
+}
+
+.file-dropdown [class*="option"]:hover {
+    background: var(--accent-muted) !important;
+    color: var(--text-primary) !important;
+}
+
+.file-dropdown [class*="singleValue"] {
+    color: var(--text-primary) !important;
+    font-family: var(--font-mono) !important;
+    font-size: 11px !important;
+}
+
+.file-dropdown [class*="placeholder"] {
+    color: var(--text-dim) !important;
+    font-style: italic;
+    font-family: var(--font-mono) !important;
+    font-size: 11px !important;
+}
+
+.file-dropdown [class*="input"] input {
+    color: var(--text-primary) !important;
+    font-family: var(--font-mono) !important;
+}
+
+.file-dropdown [class*="indicatorSeparator"] {
+    background: var(--border-subtle) !important;
+}
+
+.file-dropdown [class*="indicator"] svg {
+    fill: var(--text-dim) !important;
+}
+
+/* ── Inset Spectrum Overlays ──────────────────────── */
+
+.inset-container {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    z-index: 10;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-subtle);
+    overflow: hidden;
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.inset-graph {
+    pointer-events: none;
+}
+
+/* Ensure image-panel is a positioning context for the inset */
+.image-panel {
+    position: relative;
+}
+
+/* ── ROI Table Clickable ──────────────────────────── */
+
+.roi-table {
+    cursor: pointer;
+}
+
+.roi-table tr {
+    transition: background 0.15s;
+}
+
+.roi-table tbody tr:hover,
+.roi-table tr:hover {
+    background: rgba(255, 255, 255, 0.02);
 }
 
 /* ── Loading Shimmer Animation ────────────────────── */
