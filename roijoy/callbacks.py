@@ -135,9 +135,10 @@ def load_file_by_path(n_clicks, path, current_data, rgb_mode, low, high, gain, o
      Input("gain", "value"),
      Input("offset", "value")],
     State("image-data-store", "data"),
+    [State(f"image-graph-{i}", "figure") for i in range(MAX_PANELS)],
     prevent_initial_call=True,
 )
-def update_contrast(rgb_mode, low, high, gain, offset, image_data):
+def update_contrast(rgb_mode, low, high, gain, offset, image_data, *current_figures):
     """Re-render all loaded images with new contrast/RGB settings."""
     if not image_data:
         raise PreventUpdate
@@ -151,6 +152,10 @@ def update_contrast(rgb_mode, low, high, gain, offset, image_data):
                 rgb_mode, low, high, gain, offset,
             )
             # Preserve existing shapes (drawn polygons)
+            if current_figures[i] and isinstance(current_figures[i], dict):
+                old_shapes = current_figures[i].get("layout", {}).get("shapes", [])
+                if old_shapes:
+                    fig.update_layout(shapes=old_shapes)
             figures.append(fig)
         else:
             figures.append(no_update)
