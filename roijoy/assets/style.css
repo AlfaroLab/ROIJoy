@@ -1,0 +1,138 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    background: #0f1117;
+    color: #e0e0e0;
+}
+
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 280px;
+    height: 100vh;
+    background: #1a1d26;
+    padding: 20px;
+    overflow-y: auto;
+    border-right: 1px solid #2a2d36;
+    box-sizing: border-box;
+    z-index: 100;
+}
+
+.sidebar h1 {
+    font-size: 1.4em;
+    margin: 0 0 20px 0;
+    color: #4ecdc4;
+}
+
+.sidebar h3 {
+    font-size: 0.85em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #888;
+    margin: 20px 0 8px 0;
+}
+
+.main-content {
+    margin-left: 280px;
+    padding: 16px;
+}
+
+.image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.image-panel {
+    background: #1a1d26;
+    border-radius: 8px;
+    border: 1px solid #2a2d36;
+    overflow: hidden;
+}
+
+.image-panel .panel-header {
+    padding: 8px 12px;
+    background: #22252e;
+    font-size: 0.85em;
+    color: #aaa;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.spectrum-panel {
+    background: #1a1d26;
+    border-radius: 8px;
+    border: 1px solid #2a2d36;
+    padding: 12px;
+    margin-bottom: 16px;
+}
+
+.roi-table {
+    background: #1a1d26;
+    border-radius: 8px;
+    border: 1px solid #2a2d36;
+    padding: 12px;
+}
+
+.roi-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.roi-table th,
+.roi-table td {
+    padding: 6px 10px;
+    text-align: left;
+    border-bottom: 1px solid #2a2d36;
+}
+
+.roi-table th {
+    color: #888;
+    font-weight: 600;
+    font-size: 0.8em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Dash component style overrides */
+.dash-button {
+    background: #4ecdc4 !important;
+    color: #0f1117 !important;
+    border: none !important;
+    border-radius: 4px !important;
+    padding: 8px 16px !important;
+    cursor: pointer !important;
+    font-weight: 600 !important;
+    font-size: 0.85em !important;
+}
+
+.dash-button:hover {
+    background: #45b7b0 !important;
+}
+
+.dash-button-danger {
+    background: #e74c3c !important;
+}
+
+.dash-button-danger:hover {
+    background: #c0392b !important;
+}
+
+/* Slider styling */
+.rc-slider-track {
+    background: #4ecdc4 !important;
+}
+
+.rc-slider-handle {
+    border-color: #4ecdc4 !important;
+}
+
+/* Radio items */
+.radio-items label {
+    display: block;
+    padding: 4px 0;
+    font-size: 0.85em;
+}
