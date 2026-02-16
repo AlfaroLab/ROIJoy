@@ -9,15 +9,15 @@ def make_empty_figure():
     fig = go.Figure()
     fig.update_layout(
         template="plotly_dark",
-        paper_bgcolor="#1a1d26",
-        plot_bgcolor="#1a1d26",
+        paper_bgcolor="#0a0d14",
+        plot_bgcolor="#0a0d14",
         margin=dict(l=0, r=0, t=0, b=0),
         xaxis=dict(visible=False, range=[0, 1]),
         yaxis=dict(visible=False, range=[0, 1], scaleanchor="x"),
         dragmode="drawclosedpath",
         newshape=dict(
-            line=dict(color="#4ecdc4", width=2),
-            fillcolor="rgba(78, 205, 196, 0.1)",
+            line=dict(color="#00e5cc", width=2),
+            fillcolor="rgba(0, 229, 204, 0.08)",
         ),
     )
     return fig
@@ -28,13 +28,28 @@ def make_spectrum_figure():
     fig = go.Figure()
     fig.update_layout(
         template="plotly_dark",
-        paper_bgcolor="#1a1d26",
-        plot_bgcolor="#1a1d26",
-        margin=dict(l=60, r=20, t=40, b=40),
+        paper_bgcolor="#0a0d14",
+        plot_bgcolor="#0a0d14",
+        margin=dict(l=60, r=20, t=30, b=40),
         xaxis_title="Wavelength (nm)",
         yaxis_title="Reflectance",
-        title="Spectrum Comparison",
-        height=300,
+        title=dict(text="SPECTRUM COMPARISON", font=dict(size=11)),
+        height=280,
+        xaxis=dict(
+            gridcolor="#1c2233",
+            zerolinecolor="#1c2233",
+            tickfont=dict(size=9),
+        ),
+        yaxis=dict(
+            gridcolor="#1c2233",
+            zerolinecolor="#1c2233",
+            tickfont=dict(size=9),
+        ),
+        legend=dict(
+            font=dict(size=10),
+            bgcolor="rgba(0,0,0,0)",
+            borderwidth=0,
+        ),
     )
     return fig
 

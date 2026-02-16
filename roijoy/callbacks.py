@@ -13,10 +13,10 @@ from roijoy.layout import make_empty_figure, make_spectrum_figure, MAX_PANELS
 # Server-side cache for loaded cubes (keyed by panel index)
 _cube_cache = {}
 
-# 10 distinct ROI colors
+# 10 distinct ROI colors — high contrast on dark backgrounds
 ROI_COLORS = [
-    "#e74c3c", "#3498db", "#2ecc71", "#f39c12", "#9b59b6",
-    "#1abc9c", "#e67e22", "#2980b9", "#27ae60", "#c0392b",
+    "#ff6b6b", "#4dabf7", "#51cf66", "#fcc419", "#cc5de8",
+    "#20c997", "#ff922b", "#339af0", "#69db7c", "#f06595",
 ]
 
 LINE_STYLES = ["solid", "dash", "dot", "dashdot", "longdash", "longdashdot"]
@@ -43,8 +43,8 @@ def _build_image_figure(cube, wavelengths, rgb_mode, low, high, gain, offset):
         sizing="stretch",
         layer="below",
     )
-    fig.update_xaxes(range=[0, cube.shape[1]])
-    fig.update_yaxes(range=[cube.shape[0], 0])
+    fig.update_xaxes(range=[0, cube.shape[1]], gridcolor="#1c2233")
+    fig.update_yaxes(range=[cube.shape[0], 0], gridcolor="#1c2233")
     return fig
 
 
@@ -114,11 +114,9 @@ def load_file_by_path(n_clicks, path, current_data, rgb_mode, low, high, gain, o
     file_list = html.Ul([
         html.Li(
             os.path.basename(d.get("path", "")).replace(".hdr", ""),
-            style={"fontSize": "0.8em", "color": "#aaa", "listStyle": "none",
-                   "padding": "2px 0"},
         )
         for d in current_data.values()
-    ], style={"padding": "0", "margin": "8px 0"})
+    ], style={"padding": "0 20px", "margin": "4px 0"})
 
     return (styles + titles + figures +
             [current_data, f"Loaded: {os.path.basename(path)}", file_list])
@@ -428,31 +426,32 @@ def _build_spectrum_figure(roi_data: list) -> go.Figure:
 def _build_roi_table(roi_data: list, image_data: dict) -> html.Table:
     """Build an HTML table showing ROI status across panels."""
     if not roi_data:
-        return "No ROIs yet."
+        return "Draw polygons on loaded images to create ROIs."
 
     n_panels = len(image_data)
-    header_cells = [html.Th("ROI"), html.Th("Color")]
+    header_cells = [html.Th("#"), html.Th("")]
     for i in range(n_panels):
-        header_cells.append(html.Th(f"Img {i + 1}"))
+        header_cells.append(html.Th(f"IMG {i + 1}"))
 
     rows = [html.Tr(header_cells)]
 
     for roi in roi_data:
         cells = [
-            html.Td(str(roi["id"])),
+            html.Td(str(roi["id"]), style={"fontWeight": "600", "color": roi["color"]}),
             html.Td(html.Div(style={
-                "width": "14px", "height": "14px", "borderRadius": "50%",
+                "width": "8px", "height": "8px", "borderRadius": "50%",
                 "background": roi["color"], "display": "inline-block",
+                "boxShadow": f"0 0 6px {roi['color']}44",
             })),
         ]
         for i in range(n_panels):
             panel_roi = roi["panels"].get(str(i))
             if panel_roi is None:
-                cells.append(html.Td("-", style={"color": "#555"}))
+                cells.append(html.Td("\u2014", style={"color": "#3d4454"}))
             elif panel_roi["confirmed"]:
-                cells.append(html.Td("\u2713", style={"color": "#2ecc71", "fontWeight": "bold"}))
+                cells.append(html.Td("\u2713", style={"color": "#51cf66", "fontWeight": "700"}))
             else:
-                cells.append(html.Td("~", style={"color": "#f39c12"}))
+                cells.append(html.Td("\u223c", style={"color": "#fcc419"}))
 
         rows.append(html.Tr(cells))
 
