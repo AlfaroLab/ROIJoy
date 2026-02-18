@@ -1,47 +1,23 @@
 """Dash layout for ROIJoy multi-panel interface."""
-import os
-import glob
 import dash
 from dash import html, dcc
 import plotly.graph_objects as go
 
-
-# ---------------------------------------------------------------------------
-# Default data directory — scanned for .hdr files on startup
-# ---------------------------------------------------------------------------
-_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DEFAULT_DATA_DIR = os.path.join(_PROJECT_ROOT, "data")
-
-
-def scan_hdr_files(directory: str = DEFAULT_DATA_DIR) -> list[dict]:
-    """Scan a directory for .hdr files and return dropdown options."""
-    if not os.path.isdir(directory):
-        return []
-    hdr_files = sorted(glob.glob(os.path.join(directory, "*.hdr")))
-    return [
-        {"label": os.path.basename(f).replace(".hdr", ""), "value": f}
-        for f in hdr_files
-    ]
-
-
-# ---------------------------------------------------------------------------
-# Figure factories
-# ---------------------------------------------------------------------------
 
 def make_empty_figure():
     """Create an empty Plotly figure with dark theme for image display."""
     fig = go.Figure()
     fig.update_layout(
         template="plotly_dark",
-        paper_bgcolor="#0a0d14",
-        plot_bgcolor="#0a0d14",
+        paper_bgcolor="#1a1d26",
+        plot_bgcolor="#1a1d26",
         margin=dict(l=0, r=0, t=0, b=0),
         xaxis=dict(visible=False, range=[0, 1]),
         yaxis=dict(visible=False, range=[0, 1], scaleanchor="x"),
         dragmode="drawclosedpath",
         newshape=dict(
-            line=dict(color="#00e5cc", width=2),
-            fillcolor="rgba(0, 229, 204, 0.08)",
+            line=dict(color="#4ecdc4", width=2),
+            fillcolor="rgba(78, 205, 196, 0.1)",
         ),
     )
     return fig
@@ -52,45 +28,13 @@ def make_spectrum_figure():
     fig = go.Figure()
     fig.update_layout(
         template="plotly_dark",
-        paper_bgcolor="#0a0d14",
-        plot_bgcolor="#0a0d14",
-        margin=dict(l=60, r=20, t=30, b=40),
+        paper_bgcolor="#1a1d26",
+        plot_bgcolor="#1a1d26",
+        margin=dict(l=60, r=20, t=40, b=40),
         xaxis_title="Wavelength (nm)",
         yaxis_title="Reflectance",
-        title=dict(text="SPECTRUM COMPARISON", font=dict(size=11)),
-        height=280,
-        xaxis=dict(
-            gridcolor="#1c2233",
-            zerolinecolor="#1c2233",
-            tickfont=dict(size=9),
-        ),
-        yaxis=dict(
-            gridcolor="#1c2233",
-            zerolinecolor="#1c2233",
-            tickfont=dict(size=9),
-        ),
-        legend=dict(
-            font=dict(size=10),
-            bgcolor="rgba(0,0,0,0)",
-            borderwidth=0,
-        ),
-    )
-    return fig
-
-
-def make_inset_figure():
-    """Create an empty mini figure for per-panel spectrum inset."""
-    fig = go.Figure()
-    fig.update_layout(
-        template="plotly_dark",
-        paper_bgcolor="rgba(10, 13, 20, 0.85)",
-        plot_bgcolor="rgba(10, 13, 20, 0.85)",
-        margin=dict(l=4, r=4, t=4, b=4),
-        xaxis=dict(visible=False),
-        yaxis=dict(visible=False),
-        showlegend=False,
-        height=110,
-        width=170,
+        title="Spectrum Comparison",
+        height=300,
     )
     return fig
 
@@ -100,25 +44,15 @@ MAX_PANELS = 6
 
 def create_layout():
     """Build the full Dash layout."""
-    # Scan for .hdr files in default data directory
-    hdr_options = scan_hdr_files()
-
     # Sidebar
     sidebar = html.Div(className="sidebar", children=[
         html.H1("ROIJoy"),
 
         html.H3("Load Images"),
-        dcc.Dropdown(
-            id="file-dropdown",
-            options=hdr_options,
-            placeholder="Select a file...",
-            searchable=True,
-            className="file-dropdown",
-        ),
         dcc.Input(
             id="file-path-input",
             type="text",
-            placeholder="or type a custom path...",
+            placeholder="/path/to/file.hdr",
             style={"width": "100%", "marginBottom": "8px",
                    "background": "#22252e", "border": "1px solid #2a2d36",
                    "color": "#e0e0e0", "padding": "8px", "borderRadius": "4px",
@@ -177,7 +111,7 @@ def create_layout():
         }),
     ])
 
-    # Image panels (up to 6) — each with an inset overlay
+    # Image panels (up to 6)
     image_panels = []
     for i in range(MAX_PANELS):
         panel = html.Div(
@@ -192,7 +126,6 @@ def create_layout():
                                        "color": "#888", "cursor": "pointer",
                                        "fontSize": "1.2em"}),
                 ]),
-                # Image graph
                 dcc.Graph(
                     id=f"image-graph-{i}",
                     figure=make_empty_figure(),
@@ -204,20 +137,6 @@ def create_layout():
                         "scrollZoom": True,
                     },
                     style={"height": "400px"},
-                ),
-                # Inset spectrum overlay (hidden by default)
-                html.Div(
-                    id=f"inset-container-{i}",
-                    className="inset-container",
-                    style={"display": "none"},
-                    children=[
-                        dcc.Graph(
-                            id=f"inset-graph-{i}",
-                            figure=make_inset_figure(),
-                            config={"displayModeBar": False, "staticPlot": True},
-                            className="inset-graph",
-                        ),
-                    ],
                 ),
             ],
         )
@@ -239,8 +158,7 @@ def create_layout():
             html.H3("ROIs", style={"margin": "0 0 8px 0", "fontSize": "0.85em",
                                     "textTransform": "uppercase", "letterSpacing": "1px",
                                     "color": "#888"}),
-            html.Div(id="roi-table-content",
-                     children="No ROIs yet. Load images and draw polygons to get started."),
+            html.Div(id="roi-table-content", children="No ROIs yet. Load images and draw polygons to get started."),
         ]),
     ])
 
@@ -249,7 +167,6 @@ def create_layout():
         dcc.Store(id="image-data-store", data={}),
         dcc.Store(id="roi-store", data=[]),
         dcc.Store(id="active-panel", data=None),
-        dcc.Store(id="selected-roi", data=None),
     ]
 
     return html.Div(children=[sidebar, main] + stores)

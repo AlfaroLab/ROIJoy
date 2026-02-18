@@ -8,28 +8,18 @@ import plotly.graph_objects as go
 from roijoy.envi_io import load_envi, render_rgb, apply_contrast, rgb_to_base64
 from roijoy.roi import extract_spectrum, export_spectrum_csv, export_combined_csv
 from roijoy.matching import match_roi, copy_roi
-from roijoy.layout import make_empty_figure, make_spectrum_figure, make_inset_figure, MAX_PANELS
+from roijoy.layout import make_empty_figure, make_spectrum_figure, MAX_PANELS
 
 # Server-side cache for loaded cubes (keyed by panel index)
 _cube_cache = {}
 
-# 10 distinct ROI colors — high contrast on dark backgrounds
+# 10 distinct ROI colors
 ROI_COLORS = [
-    "#ff6b6b", "#4dabf7", "#51cf66", "#fcc419", "#cc5de8",
-    "#20c997", "#ff922b", "#339af0", "#69db7c", "#f06595",
+    "#e74c3c", "#3498db", "#2ecc71", "#f39c12", "#9b59b6",
+    "#1abc9c", "#e67e22", "#2980b9", "#27ae60", "#c0392b",
 ]
 
 LINE_STYLES = ["solid", "dash", "dot", "dashdot", "longdash", "longdashdot"]
-
-
-def _hex_to_rgba(hex_color: str, alpha: float) -> str:
-    """Convert a hex color like '#ff6b6b' to 'rgba(255, 107, 107, alpha)'.
-
-    Plotly does not support 8-digit hex (#RRGGBBAA), so we must use rgba().
-    """
-    h = hex_color.lstrip("#")
-    r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
-    return f"rgba({r}, {g}, {b}, {alpha})"
 
 
 def _build_image_figure(cube, wavelengths, rgb_mode, low, high, gain, offset):
@@ -53,24 +43,9 @@ def _build_image_figure(cube, wavelengths, rgb_mode, low, high, gain, offset):
         sizing="stretch",
         layer="below",
     )
-    fig.update_xaxes(range=[0, cube.shape[1]], gridcolor="#1c2233")
-    fig.update_yaxes(range=[cube.shape[0], 0], gridcolor="#1c2233")
+    fig.update_xaxes(range=[0, cube.shape[1]])
+    fig.update_yaxes(range=[cube.shape[0], 0])
     return fig
-
-
-# ---------------------------------------------------------------------------
-# Callback: Sync dropdown selection to text input
-# ---------------------------------------------------------------------------
-@callback(
-    Output("file-path-input", "value"),
-    Input("file-dropdown", "value"),
-    prevent_initial_call=True,
-)
-def sync_dropdown_to_input(dropdown_value):
-    """When user selects a file from the dropdown, put the path in the input."""
-    if dropdown_value:
-        return dropdown_value
-    raise PreventUpdate
 
 
 # ---------------------------------------------------------------------------
@@ -139,9 +114,11 @@ def load_file_by_path(n_clicks, path, current_data, rgb_mode, low, high, gain, o
     file_list = html.Ul([
         html.Li(
             os.path.basename(d.get("path", "")).replace(".hdr", ""),
+            style={"fontSize": "0.8em", "color": "#aaa", "listStyle": "none",
+                   "padding": "2px 0"},
         )
         for d in current_data.values()
-    ], style={"padding": "0 20px", "margin": "4px 0"})
+    ], style={"padding": "0", "margin": "8px 0"})
 
     return (styles + titles + figures +
             [current_data, f"Loaded: {os.path.basename(path)}", file_list])
@@ -158,10 +135,9 @@ def load_file_by_path(n_clicks, path, current_data, rgb_mode, low, high, gain, o
      Input("gain", "value"),
      Input("offset", "value")],
     State("image-data-store", "data"),
-    [State(f"image-graph-{i}", "figure") for i in range(MAX_PANELS)],
     prevent_initial_call=True,
 )
-def update_contrast(rgb_mode, low, high, gain, offset, image_data, *current_figures):
+def update_contrast(rgb_mode, low, high, gain, offset, image_data):
     """Re-render all loaded images with new contrast/RGB settings."""
     if not image_data:
         raise PreventUpdate
@@ -175,10 +151,6 @@ def update_contrast(rgb_mode, low, high, gain, offset, image_data, *current_figu
                 rgb_mode, low, high, gain, offset,
             )
             # Preserve existing shapes (drawn polygons)
-            if current_figures[i] and isinstance(current_figures[i], dict):
-                old_shapes = current_figures[i].get("layout", {}).get("shapes", [])
-                if old_shapes:
-                    fig.update_layout(shapes=old_shapes)
             figures.append(fig)
         else:
             figures.append(no_update)
@@ -358,136 +330,6 @@ def sync_zoom(*args):
 
 
 # ---------------------------------------------------------------------------
-# Callback: ROI table row click -> select ROI
-# ---------------------------------------------------------------------------
-@callback(
-    Output("selected-roi", "data"),
-    Output("roi-table-content", "children", allow_duplicate=True),
-    Input("roi-table-content", "n_clicks"),
-    State("selected-roi", "data"),
-    State("roi-store", "data"),
-    State("image-data-store", "data"),
-    prevent_initial_call=True,
-)
-def on_roi_table_click(n_clicks, current_selected, roi_data, image_data):
-    """Toggle ROI selection when the table area is clicked.
-
-    We use a simple cycling approach: each click selects the next ROI,
-    or deselects if we've cycled through all.
-    """
-    if not roi_data:
-        raise PreventUpdate
-
-    # Cycle through ROI IDs: None -> 1 -> 2 -> ... -> None
-    roi_ids = [r["id"] for r in roi_data]
-    if current_selected is None:
-        new_selected = roi_ids[0]
-    else:
-        try:
-            idx = roi_ids.index(current_selected)
-            if idx + 1 < len(roi_ids):
-                new_selected = roi_ids[idx + 1]
-            else:
-                new_selected = None  # Deselect
-        except ValueError:
-            new_selected = roi_ids[0]
-
-    table = _build_roi_table(roi_data, image_data or {}, selected_roi_id=new_selected)
-    return new_selected, table
-
-
-# ---------------------------------------------------------------------------
-# Callback: Update inset spectrum overlays based on selected ROI
-# ---------------------------------------------------------------------------
-@callback(
-    [Output(f"inset-container-{i}", "style") for i in range(MAX_PANELS)] +
-    [Output(f"inset-graph-{i}", "figure") for i in range(MAX_PANELS)],
-    Input("selected-roi", "data"),
-    State("roi-store", "data"),
-    State("image-data-store", "data"),
-    prevent_initial_call=True,
-)
-def update_inset_spectra(selected_roi_id, roi_data, image_data):
-    """Show/hide per-panel inset spectrum for the selected ROI."""
-    inset_styles = [{"display": "none"}] * MAX_PANELS
-    inset_figures = [make_inset_figure()] * MAX_PANELS
-
-    if selected_roi_id is None or not roi_data:
-        return inset_styles + inset_figures
-
-    # Find the selected ROI
-    selected_roi = None
-    for roi in roi_data:
-        if roi["id"] == selected_roi_id:
-            selected_roi = roi
-            break
-
-    if selected_roi is None:
-        return inset_styles + inset_figures
-
-    color = selected_roi["color"]
-
-    for panel_str, panel_roi in selected_roi["panels"].items():
-        panel_idx = int(panel_str)
-        if panel_idx >= MAX_PANELS:
-            continue
-
-        cache = _cube_cache.get(panel_idx)
-        if cache is None:
-            continue
-
-        result = extract_spectrum(
-            cache["cube"], cache["wavelengths"], panel_roi["vertices"]
-        )
-
-        wl = result["wavelengths"].tolist()
-        mean = result["mean"].tolist()
-        std = result["std"].tolist()
-
-        fig = make_inset_figure()
-
-        # Shaded +/- 1 SD band
-        upper = [m + s for m, s in zip(mean, std)]
-        lower = [m - s for m, s in zip(mean, std)]
-
-        fig.add_trace(go.Scatter(
-            x=wl + wl[::-1],
-            y=upper + lower[::-1],
-            fill="toself",
-            fillcolor=_hex_to_rgba(color, 0.13),
-            line=dict(width=0),
-            showlegend=False,
-            hoverinfo="skip",
-        ))
-
-        # Mean line
-        fig.add_trace(go.Scatter(
-            x=wl,
-            y=mean,
-            mode="lines",
-            line=dict(color=color, width=1.5),
-            showlegend=False,
-            hoverinfo="skip",
-        ))
-
-        # Status label
-        status = "\u2713" if panel_roi.get("confirmed") else "\u223c"
-        fig.add_annotation(
-            x=0.02, y=0.95,
-            xref="paper", yref="paper",
-            text=f"<b>ROI {selected_roi_id} {status}</b>",
-            showarrow=False,
-            font=dict(size=8, color=color),
-            xanchor="left", yanchor="top",
-        )
-
-        inset_styles[panel_idx] = {"display": "block"}
-        inset_figures[panel_idx] = fig
-
-    return inset_styles + inset_figures
-
-
-# ---------------------------------------------------------------------------
 # Callback: Export all ROIs
 # ---------------------------------------------------------------------------
 @callback(
@@ -578,54 +420,35 @@ def _build_spectrum_figure(roi_data: list) -> go.Figure:
     return fig
 
 
-def _build_roi_table(roi_data: list, image_data: dict, selected_roi_id=None) -> html.Div:
-    """Build an HTML table showing ROI status across panels.
-
-    Rows for the selected ROI are highlighted.
-    """
+def _build_roi_table(roi_data: list, image_data: dict) -> html.Table:
+    """Build an HTML table showing ROI status across panels."""
     if not roi_data:
-        return html.Div("Draw polygons on loaded images to create ROIs.")
+        return "No ROIs yet."
 
     n_panels = len(image_data)
-    header_cells = [html.Th("#"), html.Th("")]
+    header_cells = [html.Th("ROI"), html.Th("Color")]
     for i in range(n_panels):
-        header_cells.append(html.Th(f"IMG {i + 1}"))
+        header_cells.append(html.Th(f"Img {i + 1}"))
 
     rows = [html.Tr(header_cells)]
 
     for roi in roi_data:
-        is_selected = (roi["id"] == selected_roi_id)
-        row_style = {}
-        if is_selected:
-            row_style = {
-                "background": _hex_to_rgba(roi["color"], 0.08),
-                "borderLeft": f"2px solid {roi['color']}",
-            }
-
         cells = [
-            html.Td(str(roi["id"]), style={"fontWeight": "600", "color": roi["color"]}),
+            html.Td(str(roi["id"])),
             html.Td(html.Div(style={
-                "width": "8px", "height": "8px", "borderRadius": "50%",
+                "width": "14px", "height": "14px", "borderRadius": "50%",
                 "background": roi["color"], "display": "inline-block",
-                "boxShadow": f"0 0 6px {_hex_to_rgba(roi['color'], 0.27)}",
             })),
         ]
         for i in range(n_panels):
             panel_roi = roi["panels"].get(str(i))
             if panel_roi is None:
-                cells.append(html.Td("\u2014", style={"color": "#5c6578"}))
+                cells.append(html.Td("-", style={"color": "#555"}))
             elif panel_roi["confirmed"]:
-                cells.append(html.Td("\u2713", style={"color": "#51cf66", "fontWeight": "700"}))
+                cells.append(html.Td("\u2713", style={"color": "#2ecc71", "fontWeight": "bold"}))
             else:
-                cells.append(html.Td("\u223c", style={"color": "#fcc419"}))
+                cells.append(html.Td("~", style={"color": "#f39c12"}))
 
-        rows.append(html.Tr(cells, style=row_style))
+        rows.append(html.Tr(cells))
 
-    hint = "Click table to cycle ROI selection" if roi_data else ""
-    return html.Div([
-        html.Table(rows),
-        html.Div(hint, style={
-            "fontSize": "10px", "color": "#5c6578", "marginTop": "6px",
-            "fontFamily": "var(--font-mono)", "fontStyle": "italic",
-        }) if hint else None,
-    ])
+    return html.Table(rows)
