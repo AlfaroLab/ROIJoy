@@ -1,5 +1,5 @@
-# Data files (large ENVI binaries)
-data/
+# Data files (large ENVI binaries - keep headers, ignore binaries)
+data/*.bin
 output/
 
 # Python
