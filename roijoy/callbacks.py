@@ -567,11 +567,31 @@ def _build_spectrum_figure(roi_data: list) -> go.Figure:
                 cache["cube"], cache["wavelengths"], panel_roi["vertices"]
             )
 
+            wl = result["wavelengths"].tolist()
+            mean = result["mean"].tolist()
+            std = result["std"].tolist()
+            trace_name = f"ROI {roi_id} / Img {panel_idx + 1}"
+
+            # Shaded +/- 1 SD band
+            upper = [m + s for m, s in zip(mean, std)]
+            lower = [m - s for m, s in zip(mean, std)]
+
             fig.add_trace(go.Scatter(
-                x=result["wavelengths"].tolist(),
-                y=result["mean"].tolist(),
+                x=wl + wl[::-1],
+                y=upper + lower[::-1],
+                fill="toself",
+                fillcolor=_hex_to_rgba(color, 0.15),
+                line=dict(width=0),
+                showlegend=False,
+                hoverinfo="skip",
+            ))
+
+            # Mean line
+            fig.add_trace(go.Scatter(
+                x=wl,
+                y=mean,
                 mode="lines",
-                name=f"ROI {roi_id} / Img {panel_idx + 1}",
+                name=trace_name,
                 line=dict(color=color, dash=LINE_STYLES[panel_idx % len(LINE_STYLES)]),
             ))
 
