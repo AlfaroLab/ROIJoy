@@ -1,5 +1,6 @@
-# Data files (large ENVI binaries - keep headers, ignore binaries)
-data/*.bin
+# Data files
+# Note: cropped demo .bin files (63 MB each) are tracked in git
+# Full-size originals (136 MB) should NOT be committed
 output/
 
 # Python

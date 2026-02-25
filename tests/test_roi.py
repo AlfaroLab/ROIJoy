@@ -41,11 +41,11 @@ def test_roi_to_normalized_coords():
     from roijoy.roi import normalize_vertices
 
     vertices = [(100, 200), (300, 400)]
-    image_shape = (570, 570)
+    image_shape = (380, 380)
     normalized = normalize_vertices(vertices, image_shape)
 
-    assert normalized[0] == pytest.approx((100/570, 200/570))
-    assert normalized[1] == pytest.approx((300/570, 400/570))
+    assert normalized[0] == pytest.approx((100/380, 200/380))
+    assert normalized[1] == pytest.approx((300/380, 400/380))
 
 
 def test_export_spectrum_csv(tmp_path):
