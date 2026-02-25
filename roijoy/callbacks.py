@@ -286,7 +286,7 @@ def on_shape_drawn(*args):
                 if result["success"]:
                     new_roi["panels"][str(other_idx)] = {
                         "vertices": result["vertices"],
-                        "confirmed": False,
+                        "confirmed": result["method"] == "copy",
                         "method": result["method"],
                     }
 
@@ -513,8 +513,6 @@ def export_all(n_clicks, roi_data, image_data, n_samples):
     count = 0
     for roi in roi_data:
         for panel_str, panel_roi in roi["panels"].items():
-            if not panel_roi["confirmed"]:
-                continue
             panel_idx = int(panel_str)
             cache = _cube_cache.get(panel_idx)
             if cache is None:
@@ -570,8 +568,6 @@ def _build_spectrum_figure(roi_data: list) -> go.Figure:
 
         for panel_str, panel_roi in roi["panels"].items():
             panel_idx = int(panel_str)
-            if not panel_roi["confirmed"]:
-                continue
 
             cache = _cube_cache.get(panel_idx)
             if cache is None:
@@ -584,7 +580,8 @@ def _build_spectrum_figure(roi_data: list) -> go.Figure:
             wl = result["wavelengths"].tolist()
             mean = result["mean"].tolist()
             std = result["std"].tolist()
-            trace_name = f"ROI {roi_id} / Img {panel_idx + 1}"
+            status = "" if panel_roi.get("confirmed") else " ~"
+            trace_name = f"ROI {roi_id} / Img {panel_idx + 1}{status}"
 
             # Shaded +/- 1 SD band
             upper = [m + s for m, s in zip(mean, std)]

@@ -332,6 +332,43 @@ body::after {
     box-shadow: 0 0 10px var(--accent-muted) !important;
 }
 
+/* ── Export Section ───────────────────────────────── */
+
+.sidebar input[type="number"] {
+    font-family: var(--font-mono) !important;
+    font-size: 13px !important;
+    width: calc(100% - 40px) !important;
+    margin: 4px 20px 6px !important;
+    background: var(--bg-recessed) !important;
+    border: 1px solid var(--border-panel) !important;
+    color: var(--text-primary) !important;
+    padding: 8px 10px !important;
+    border-radius: var(--radius-sm) !important;
+    outline: none !important;
+    transition: border-color 0.2s;
+}
+
+.sidebar input[type="number"]:focus {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 1px var(--border-active) !important;
+}
+
+/* Make Export button more prominent */
+#btn-export {
+    background: var(--accent) !important;
+    color: var(--bg-deep) !important;
+    border: 1px solid var(--accent) !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    padding: 10px 16px !important;
+    letter-spacing: 2px !important;
+}
+
+#btn-export:hover {
+    background: #33edd8 !important;
+    box-shadow: 0 0 16px var(--accent-muted) !important;
+}
+
 /* ── Status Message ───────────────────────────────── */
 
 #status-msg {

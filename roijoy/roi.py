@@ -90,8 +90,6 @@ def export_combined_csv(path: str, all_roi_data: list, cube_cache: dict) -> None
     for roi in all_roi_data:
         roi_id = roi["id"]
         for panel_str, panel_roi in roi["panels"].items():
-            if not panel_roi["confirmed"]:
-                continue
             panel_idx = int(panel_str)
             cache = cube_cache.get(panel_idx)
             if cache is None:
