@@ -168,7 +168,19 @@ def create_layout():
             className="radio-items",
         ),
 
-        html.H3("Tools"),
+        html.H3("Export"),
+        html.Label("Random sample (pixels per ROI)",
+                    style={"fontSize": "0.8em", "color": "#888"}),
+        dcc.Input(
+            id="subsample-n",
+            type="number",
+            value=100,
+            min=1, max=10000, step=1,
+            style={"width": "100%", "marginBottom": "8px",
+                   "background": "#22252e", "border": "1px solid #2a2d36",
+                   "color": "#e0e0e0", "padding": "8px", "borderRadius": "4px",
+                   "boxSizing": "border-box"},
+        ),
         html.Button("Export All", id="btn-export", className="dash-button",
                      style={"width": "100%", "marginBottom": "8px"}),
 

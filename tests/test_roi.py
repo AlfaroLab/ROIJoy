@@ -48,6 +48,26 @@ def test_roi_to_normalized_coords():
     assert normalized[1] == pytest.approx((300/380, 400/380))
 
 
+def test_export_subsample_csv(tmp_path):
+    from roijoy.envi_io import load_envi
+    from roijoy.roi import extract_subsample, export_subsample_csv
+
+    cube, wavelengths = load_envi(str(SAMPLE_HDR))
+    vertices = [(100, 100), (200, 100), (200, 200), (100, 200)]
+
+    coords, spectra = extract_subsample(cube, vertices, n_samples=50)
+    outpath = tmp_path / "random_sample.csv"
+    export_subsample_csv(str(outpath), wavelengths, coords, spectra)
+
+    with open(outpath) as f:
+        lines = f.readlines()
+    header = lines[0].strip().split(",")
+    assert header[0] == "X_coord"
+    assert header[1] == "Y_coord"
+    assert len(header) == 2 + 110  # coords + wavelength bands
+    assert len(lines) == 1 + len(spectra)  # header + data rows
+
+
 def test_export_spectrum_csv(tmp_path):
     from roijoy.roi import export_spectrum_csv
 

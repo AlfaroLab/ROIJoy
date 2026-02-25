@@ -62,6 +62,26 @@ def export_spectrum_csv(path: str, wavelengths: np.ndarray,
             writer.writerow([f"{w:.1f}", f"{m:.6e}", f"{s:.6e}"])
 
 
+def export_subsample_csv(path: str, wavelengths: np.ndarray,
+                         coords: np.ndarray, spectra: np.ndarray) -> None:
+    """Export per-pixel random subsample to CSV.
+
+    Matches the legacy polygon selector format:
+      X_coord, Y_coord, wl_1, wl_2, ..., wl_N
+
+    Args:
+        path: Output file path
+        wavelengths: Wavelength array (nm)
+        coords: Pixel coordinates, shape (n_samples, 2) as (x, y)
+        spectra: Reflectance values, shape (n_samples, n_bands)
+    """
+    header = ['X_coord', 'Y_coord'] + [f'{w:.1f}' for w in wavelengths]
+    fmt = ['%d', '%d'] + ['%.6e'] * spectra.shape[1]
+    data = np.column_stack((coords, spectra))
+    np.savetxt(path, data, delimiter=',', header=','.join(header),
+               comments='', fmt=fmt)
+
+
 def export_combined_csv(path: str, all_roi_data: list, cube_cache: dict) -> None:
     """Export all ROI spectra across all images into a single comparison CSV."""
     rows = []

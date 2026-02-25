@@ -6,7 +6,8 @@ from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
 
 from roijoy.envi_io import load_envi, render_rgb, apply_contrast, rgb_to_base64
-from roijoy.roi import extract_spectrum, export_spectrum_csv, export_combined_csv
+from roijoy.roi import (extract_spectrum, extract_subsample, export_spectrum_csv,
+                        export_subsample_csv, export_combined_csv)
 from roijoy.matching import match_roi, copy_roi
 from roijoy.layout import make_empty_figure, make_spectrum_figure, make_inset_figure, MAX_PANELS
 
@@ -495,12 +496,16 @@ def update_inset_spectra(selected_roi_id, roi_data, image_data):
     Input("btn-export", "n_clicks"),
     State("roi-store", "data"),
     State("image-data-store", "data"),
+    State("subsample-n", "value"),
     prevent_initial_call=True,
 )
-def export_all(n_clicks, roi_data, image_data):
+def export_all(n_clicks, roi_data, image_data, n_samples):
     """Export all confirmed ROI data to CSV files."""
     if not roi_data:
         return "No ROIs to export."
+
+    if n_samples is None or n_samples < 1:
+        n_samples = 100
 
     output_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "output")
     os.makedirs(output_dir, exist_ok=True)
@@ -515,16 +520,25 @@ def export_all(n_clicks, roi_data, image_data):
             if cache is None:
                 continue
 
+            # Summary export (mean + std)
             result = extract_spectrum(cache["cube"], cache["wavelengths"], panel_roi["vertices"])
             outpath = os.path.join(output_dir,
                                    f"roi_{roi['id']}_panel_{panel_idx}_spectrum.csv")
             export_spectrum_csv(outpath, result["wavelengths"], result["mean"], result["std"])
+
+            # Random subsample export (per-pixel)
+            coords, spectra = extract_subsample(
+                cache["cube"], panel_roi["vertices"], n_samples=int(n_samples),
+            )
+            sample_path = os.path.join(output_dir,
+                                       f"roi_{roi['id']}_panel_{panel_idx}_random_sample.csv")
+            export_subsample_csv(sample_path, cache["wavelengths"], coords, spectra)
             count += 1
 
     combined_path = os.path.join(output_dir, "combined_comparison.csv")
     export_combined_csv(combined_path, roi_data, _cube_cache)
 
-    return f"Exported {count} spectra + combined CSV to output/"
+    return f"Exported {count} spectra ({n_samples}-pt subsamples) + combined CSV to output/"
 
 
 # ---------------------------------------------------------------------------
